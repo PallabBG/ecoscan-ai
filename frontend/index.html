@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>EcoScan AI | Smart Recycling</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+
+    <div class="bg-shape shape-1"></div>
+    <div class="bg-shape shape-2"></div>
+
+    <header class="header">
+      <div class="header-left">
+        <div class="logo"><i class="fa-solid fa-leaf"></i> EcoScan AI</div>
+        <div class="badge">Code Smashers</div>
+      </div>
+
+      <nav class="header-center">
+        <a href="index.html" class="nav-item active">Home</a>
+        <a href="#" onclick="openLeaderboard()" class="nav-item">Leaderboard 🏆</a>
+        <a href="#" onclick="openHistory()" class="nav-item">History 📜</a> <a href="#" onclick="toggleGuide()" class="nav-item">Bin Guide ♻️</a>
+      </nav>
+
+      <div class="header-right">
+        <div id="authActions" class="auth-group">
+          <a href="login.html" class="nav-link">Login</a>
+          <a href="signup.html" class="primary-btn sm-btn">Get Started</a>
+        </div>
+
+        <div id="userActions" class="user-row hidden">
+          <div class="points-pill">
+            <i class="fa-solid fa-star"></i>
+            <span id="headerPoints">0</span>
+          </div>
+
+          <div class="user-dropdown-container">
+            <div class="profile-trigger" onclick="toggleProfileMenu()">
+              <div class="profile-circle" id="profileCircle">U</div>
+            </div>
+
+            <div id="profileMenu" class="dropdown-menu hidden">
+              <div class="dropdown-header">
+                <p id="dropdownName" class="d-name">User</p>
+                <p id="dropdownEmail" class="d-email">email@test.com</p>
+              </div>
+              <div class="dropdown-divider"></div>
+              
+              <div class="dropdown-stats">
+                <div class="stat-box">
+                  <span class="stat-label">Eco Points</span>
+                  <span class="stat-value" id="dropdownPoints">0</span>
+                </div>
+                <div class="stat-box">
+                  <span class="stat-label">Total Scans</span>
+                  <span class="stat-value" id="dropdownScans">0</span>
+                </div>
+              </div>
+
+              <div class="dropdown-divider"></div>
+              <button onclick="logout()" class="dropdown-item logout-btn">
+                <i class="fa-solid fa-right-from-bracket"></i> Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <div id="leaderboardModal" class="modal-overlay hidden" onclick="closeLeaderboard()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>🏆 Top Recyclers</h3>
+          <button class="close-btn" onclick="closeLeaderboard()">&times;</button>
+        </div>
+        <div class="leaderboard-list" id="leaderboardList">
+          <p>Loading...</p>
+        </div>
+      </div>
+    </div>
+    <div id="guideModal" class="modal-overlay hidden" onclick="toggleGuide()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>🗑️ Waste Bin Guide</h3>
+          <button class="close-btn" onclick="toggleGuide()">&times;</button>
+        </div>
+        <div class="bin-grid">
+          <div class="bin-card green">
+            <div class="icon">🍏</div>
+            <h4>Green Bin</h4>
+            <p><strong>Organic / Compost</strong></p>
+            <span>Food scraps, peels, garden waste.</span>
+          </div>
+          <div class="bin-card blue">
+            <div class="icon">📰</div>
+            <h4>Blue Bin</h4>
+            <p><strong>Dry Recyclable</strong></p>
+            <span>Paper, plastic bottles, dry cardboard.</span>
+          </div>
+          <div class="bin-card red">
+            <div class="icon">🛑</div>
+            <h4>Red Bin</h4>
+            <p><strong>Reject / Hazardous</strong></p>
+            <span>Medical waste, diapers, broken glass.</span>
+          </div>
+          <div class="bin-card ewaste">
+            <div class="icon">🔌</div>
+            <h4>E-Waste</h4>
+            <p><strong>Electronics</strong></p>
+            <span>Batteries, chargers, phones (Drop-off only).</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <nav class="header-center">
+      <a href="index.html" class="nav-item active">Home</a>
+      <a href="#" onclick="openLeaderboard()" class="nav-item">Leaderboard 🏆</a>
+      <a href="#" onclick="openHistory()" class="nav-item">History 📜</a> <a href="#" onclick="toggleGuide()" class="nav-item">Bin Guide ♻️</a>
+    </nav>
+
+    <div id="historyModal" class="modal-overlay hidden" onclick="closeHistory()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>📜 Scan History</h3>
+          <button class="close-btn" onclick="closeHistory()">&times;</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p style="color:#888; text-align:center;">No scans yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="welcomeModal" class="modal-overlay hidden">
+      <div class="modal-content text-center" style="text-align: center; max-width: 400px;">
+        <div style="font-size: 50px; margin-bottom: 10px;">🎁</div>
+        <h2 style="color: var(--primary);">Welcome Gift!</h2>
+        <p>You received <strong>5 Eco Points</strong> for joining the movement.</p>
+        <button onclick="closeWelcome()" class="primary-btn" style="margin: 20px auto; width: 100%;">Awesome!</button>
+      </div>
+    </div>
+
+    <canvas id="confettiCanvas" style="position: fixed; top: 0; left: 0; pointer-events: none; z-index: 9999;"></canvas>
+        <main class="hero-container">
+          
+          <div class="hero-text">
+            <div class="pill"><i class="fa-solid fa-wand-magic-sparkles"></i> AI Powered Recycling</div>
+            <h1>Scan waste. <br> <span class="highlight">Save Earth.</span></h1>
+            <p>
+              Unsure if that item is recyclable? Snap a photo and let our AI analyze the material, composition, and guide you to the nearest disposal center.
+            </p>
+            
+            <div class="stats">
+              <div class="stat-item">
+                <strong>95%</strong>
+                <span>Accuracy</span>
+              </div>
+              <div class="stat-item">
+                <strong>Instant</strong>
+                <span>Results</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="glass-card">
+            
+            <div id="preview" class="preview-box">
+              <div class="placeholder-content">
+                <i class="fa-solid fa-cloud-arrow-up"></i>
+                <span>No image selected</span>
+              </div>
+            </div>
+
+            <div class="controls">
+              <input type="file" id="fileInput" accept="image/*" capture="environment" hidden />
+              
+              <div class="btn-group">
+                <button id="uploadBtn" class="btn primary-btn">
+                  <i class="fa-solid fa-camera"></i> Upload Photo
+                </button>
+                <button id="analyzeBtn" class="btn secondary-btn" disabled>
+                  <i class="fa-solid fa-magnifying-glass"></i> Identify
+                </button>
+              </div>
+
+              <button id="findCentersBtn" class="btn map-btn" style="display:none;">
+                <i class="fa-solid fa-map-location-dot"></i> Find Nearby Centers
+              </button>
+            </div>
+
+            <div id="choicesContainer" class="choices hidden"></div>
+
+            <div id="result" class="result-box">
+              <span class="placeholder-text">Analysis results will appear here...</span>
+            </div>
+
+            <div id="mapSection" class="map-wrapper hidden">
+              <div id="map"></div>
+            </div>
+            
+          </div>
+    </main>
+
+    <footer class="footer">
+      <p>&copy; 2025 EcoScan AI • Built by Code Smashers</p>
+    </footer>
+
+    <script src="env.js"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+      window.BACKEND_URL = "http://localhost:5000";
+
+      async function login() {
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value.trim();
+
+        if (!email || !password) {
+          alert("Please fill all fields");
+          return;
+        }
+
+        try {
+          const res = await fetch(`${window.BACKEND_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+          });
+
+          const data = await res.json();
+          console.log("LOGIN RESPONSE:", data);
+
+          if (!res.ok) {
+            alert(data.message || "Login failed");
+            return;
+          }
+
+          localStorage.setItem("token", data.token);
+          localStorage.setItem("user", JSON.stringify(data.user));
+
+          // ✅ Redirect works
+          window.location.href = "index.html";
+
+        } catch (err) {
+          console.error(err);
+          alert("Server error");
+        }
+      }
+    </script>
+    <script>
+      function isLoggedIn() {
+        return !!localStorage.getItem("token");
+      }
+
+      function getUser() {
+        return JSON.parse(localStorage.getItem("user") || "{}");
+      }
+
+      function logout() {
+        localStorage.removeItem("token");
+        localStorage.removeItem("user");
+        window.location.reload();
+      }
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const authActions = document.getElementById("authActions");
+        const userActions = document.getElementById("userActions");
+        const userNameEl = document.getElementById("userName");
+
+        if (isLoggedIn()) {
+          const user = getUser();
+          authActions.classList.add("hidden");
+          userActions.classList.remove("hidden");
+          userNameEl.innerText = user.name;
+        } else {
+          authActions.classList.remove("hidden");
+          userActions.classList.add("hidden");
+        }
+      });
+    </script>
+    <div id="historyModal" class="modal-overlay hidden" onclick="closeHistory()">
+      <div class="modal-content" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>📜 Your Scan History</h3>
+          <button class="close-btn" onclick="closeHistory()">&times;</button>
+        </div>
+        <div id="historyList" class="history-list">
+          <p style="text-align:center; color:#888;">No scans yet.</p>
+        </div>
+      </div>
+    </div>
+
+    <script src="app.js"></script>
+
+  </body>
+</html>

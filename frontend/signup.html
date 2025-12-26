@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Sign Up | EcoScan AI</title>
+    <link rel="stylesheet" href="style.css">
+    </head>
+    <body class="auth-page">
+
+        <div class="auth-card">
+        <h2>Create Account 🌱</h2>
+
+        <input id="name" placeholder="Name">
+        <input id="email" placeholder="Email">
+        <input id="password" type="password" placeholder="Password">
+
+        <button onclick="signup()" class="primary-btn">Sign Up</button>
+
+        <p>Already have an account? <a href="login.html">Login</a></p>
+        </div>
+
+        <script>
+            window.BACKEND_URL = "http://localhost:5000";
+
+            async function signup() {
+                const name = document.getElementById("name").value.trim();
+                const email = document.getElementById("email").value.trim();
+                const password = document.getElementById("password").value.trim();
+
+                if (!name || !email || !password) {
+                alert("All fields required");
+                return;
+                }
+
+                try {
+                const res = await fetch(`${window.BACKEND_URL}/api/auth/signup`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ name, email, password })
+                });
+
+                const data = await res.json();
+                console.log("SIGNUP RESPONSE:", data);
+
+                if (!res.ok) {
+                    alert(data.message || "Signup failed");
+                    return;
+                }
+
+                alert("Signup successful! Please login.");
+                window.location.href = "login.html";
+
+                } catch (err) {
+                console.error(err);
+                alert("Server error");
+                }
+            }
+        </script>
+
+
+    </body>
+</html>

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Forgot Password | EcoScan AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card glass-panel">
+    <h2>Forgot Password 🔐</h2>
+
+    <!-- STEP 1: EMAIL -->
+    <div id="stepEmail">
+    <input type="email" id="email" placeholder="Enter your email" required />
+    <button onclick="sendOtp()" class="primary-btn">Send OTP</button>
+    </div>
+
+    <!-- STEP 2: OTP -->
+    <div id="stepOtp" class="hidden">
+    <input type="text" id="otp" placeholder="Enter OTP" />
+    <button onclick="verifyOtp()" class="primary-btn">Verify OTP</button>
+    </div>
+
+    <!-- STEP 3: RESET PASSWORD -->
+    <div id="stepReset" class="hidden">
+    <input type="password" id="newPassword" placeholder="New Password" />
+    <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+    <button onclick="resetPassword()" class="primary-btn">Reset Password</button>
+    </div>
+
+
+    <p class="auth-link">
+      <a href="login.html">Back to login</a>
+    </p>
+  </div>
+
+  <script>
+    const BACKEND_URL = "http://localhost:5000";
+
+    async function sendOtp() {
+        const email = document.getElementById("email").value;
+
+        const res = await fetch(`${BACKEND_URL}/api/auth/forgot-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message);
+
+        alert("OTP sent to email");
+        document.getElementById("stepOtp").classList.remove("hidden");
+    }
+
+    async function verifyOtp() {
+        const email = document.getElementById("email").value;
+        const otp = document.getElementById("otp").value;
+
+        const res = await fetch(`${BACKEND_URL}/api/auth/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message);
+
+        alert("OTP verified");
+        document.getElementById("stepReset").classList.remove("hidden");
+    }
+
+    async function resetPassword() {
+        const email = document.getElementById("email").value;
+        const otp = document.getElementById("otp").value;
+        const newPassword = document.getElementById("newPassword").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
+
+        if (newPassword !== confirmPassword) {
+        return alert("Passwords do not match");
+        }
+
+        const res = await fetch(`${BACKEND_URL}/api/auth/reset-password`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, otp, newPassword })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message);
+
+        alert("Password reset successful");
+        window.location.href = "login.html";
+    }
+    </script>
+
+
+</body>
+</html>

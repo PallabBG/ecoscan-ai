@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Login | EcoScan AI</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="auth-page">
+
+  <div class="auth-card glass-panel">
+    <h2>Welcome Back 🌱</h2>
+
+    <input type="email" id="email" placeholder="Email" />
+    <input type="password" id="password" placeholder="Password" />
+
+    <button onclick="login()" class="primary-btn">Login</button>
+
+    <p class="auth-link">
+      Don’t have an account? <a href="signup.html">Sign up</a>
+    </p>
+    <p class="auth-link">
+      <a href="forgot.html">Forgot password?</a>
+    </p>
+  </div>
+
+  <script>
+    window.BACKEND_URL = "http://127.0.0.1:5000";
+  </script>
+  <script>
+    async function login() {
+    const email = document.getElementById("email").value.trim();
+    const password = document.getElementById("password").value.trim();
+
+    if (!email || !password) {
+        alert("Email and password required");
+        return;
+    }
+
+    try {
+        const res = await fetch(`${window.BACKEND_URL}/api/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+        console.log("LOGIN RESPONSE:", data);
+
+        if (!res.ok) {
+        alert(data.message || "Login failed");
+        return;
+        }
+
+        // ✅ STORE DATA
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("user", JSON.stringify(data.user));
+
+        // ✅ REDIRECT
+        window.location.href = "index.html";
+
+    } catch (err) {
+        console.error("Login error:", err);
+        alert("Server error");
+    }
+    }
+  </script>
+
+
+</body>
+</html>
