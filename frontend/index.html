@@ -217,7 +217,8 @@
     <script src="env.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
-      window.BACKEND_URL = "http://localhost:5000";
+      window.GEMINI_API_KEY = "{{ GEMINI_API_KEY }}";
+      window.BACKEND_URL = "{{ BACKEND_URL }}";
 
       async function login() {
         const email = document.getElementById("email").value.trim();

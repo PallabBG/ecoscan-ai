@@ -19,7 +19,7 @@
         </div>
 
         <script>
-            window.BACKEND_URL = "http://localhost:5000";
+            window.BACKEND_URL = "{{ BACKEND_URL }}";
 
             async function signup() {
                 const name = document.getElementById("name").value.trim();
