@@ -17,9 +17,9 @@
 
         <p>Already have an account? <a href="login.html">Login</a></p>
         </div>
-
+        <script src="env.js"></script>
+        <script src="auth.js"></script>
         <script>
-            window.BACKEND_URL = "{{ BACKEND_URL }}";
 
             async function signup() {
                 const name = document.getElementById("name").value.trim();

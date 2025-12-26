@@ -1,4 +1,4 @@
-const BACKEND_URL = window.BACKEND_URL;;
+const BACKEND_URL = window.BACKEND_URL;
 
 async function login() {
   const email = document.getElementById("email").value;

@@ -23,9 +23,9 @@
     </p>
   </div>
 
-  <script>
-    window.BACKEND_URL = "{{ BACKEND_URL }}";
-  </script>
+  <script src="env.js"></script>
+  <script src="auth.js"></script>
+
   <script>
     async function login() {
     const email = document.getElementById("email").value.trim();
