@@ -13,7 +13,7 @@
 
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css?v=2.0" />
   </head>
   <body>
 
@@ -122,11 +122,6 @@
         </div>
       </div>
     </div>
-    <nav class="header-center">
-      <a href="index.html" class="nav-item active">Home</a>
-      <a href="#" onclick="openLeaderboard()" class="nav-item">Leaderboard 🏆</a>
-      <a href="#" onclick="openHistory()" class="nav-item">History 📜</a> <a href="#" onclick="toggleGuide()" class="nav-item">Bin Guide ♻️</a>
-    </nav>
 
     <div id="historyModal" class="modal-overlay hidden" onclick="closeHistory()">
       <div class="modal-content" onclick="event.stopPropagation()">
@@ -181,7 +176,7 @@
             </div>
 
             <div class="controls">
-              <input type="file" id="fileInput" accept="image/*" capture="environment" hidden />
+              <input type="file" id="fileInput" accept="image/*" hidden />
               
               <div class="btn-group">
                 <button id="uploadBtn" class="btn primary-btn">
@@ -296,7 +291,20 @@
         </div>
       </div>
     </div>
-
+    <div class="mobile-nav">
+      <a href="#" onclick="openLeaderboard()">
+        <i class="fa-solid fa-trophy"></i>
+        <span>Rank</span>
+      </a>
+      <a href="#" onclick="openHistory()">
+        <i class="fa-solid fa-scroll"></i>
+        <span>History</span>
+      </a>
+      <a href="#" onclick="toggleGuide()">
+        <i class="fa-solid fa-book-open"></i>
+        <span>Guide</span>
+      </a>
+    </div>
     <script src="app.js"></script>
 
   </body>

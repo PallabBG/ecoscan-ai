@@ -59,7 +59,50 @@ app.get("/api/leaderboard", async (req, res) => {
     res.status(500).json({ error: "Failed to fetch leaderboard" });
   }
 });
+// --- NEW: Gemini Analyze Route (Backend) ---
+app.post("/api/analyze", async (req, res) => {
+  try {
+    const { imageBase64 } = req.body;
+    if (!imageBase64) return res.status(400).json({ error: "No image provided" });
 
+    const API_KEY = process.env.GEMINI_API_KEY;
+    if (!API_KEY) return res.status(500).json({ error: "Server missing API Key" });
+
+    const prompt = `You are an expert in waste classification. Analyze the provided image and respond ONLY in valid JSON with fields:
+    {
+      "item": "<short name>",
+      "category": "Recyclable | Compost | E-waste | Landfill",
+      "instruction": "<one short sentence>"
+    }
+    Do NOT add any explanation or markdown.`;
+
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
+    
+    const body = {
+      "contents": [{
+        "parts": [
+          { "text": prompt },
+          { "inline_data": { "mime_type": "image/jpeg", "data": imageBase64 } }
+        ]
+      }]
+    };
+
+    const aiRes = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+
+    const data = await aiRes.json();
+    
+    // Send raw data back to frontend to parse
+    res.json(data);
+
+  } catch (err) {
+    console.error("Gemini Error:", err);
+    res.status(500).json({ error: "AI Processing Failed" });
+  }
+});
 // ... app.listen ...
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

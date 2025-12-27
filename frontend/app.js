@@ -244,28 +244,22 @@ function onFileSelected(e){
 
 async function analyze(){
   if(!selectedFile){ alert("Choose a photo first."); return; }
-  resultContainer.innerHTML = "🔍 Identifying...";
+  
+  resultContainer.innerHTML = "🔍 Identifying (via Secure Backend)...";
   const base64 = await toBase64(selectedFile);
 
-  const prompt = `You are an expert in waste classification. Analyze the provided image and respond ONLY in valid JSON with fields:
-  {
-    "item": "<short name>",
-    "category": "Recyclable | Compost | E-waste | Landfill",
-    "instruction": "<one short sentence>"
-  }
-  Do NOT add any explanation or markdown.`;
-
-  const API_KEY = window.GEMINI_API_KEY || "";
-  if(!API_KEY){ resultContainer.innerHTML = "⚠️ Gemini API key missing."; return; }
-
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
-  const body = { "contents": [{ "parts": [{ "text": prompt }, { "inline_data": { "mime_type": selectedFile.type || "image/jpeg", "data": base64 } }] }] };
-
   try {
-    const res = await fetch(url, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-    const data = await res.json();
-    if(data.error) throw new Error(data.error.message || "Gemini API error");
+    // Call YOUR backend, not Google directly
+    const res = await fetch(`${window.BACKEND_URL}/api/analyze`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ imageBase64: base64 }),
+    });
 
+    const data = await res.json();
+    if(data.error) throw new Error(data.error);
+
+    // Parse logic (same as before)
     const text = extractTextFromGeminiResponse(data);
     if(!text) throw new Error("No text returned from AI");
 
@@ -284,12 +278,12 @@ async function analyze(){
     if(findCentersBtn) findCentersBtn.style.display = "inline-block";
 
     if (isLoggedIn()) {
-      addEcoPoints(5, lastScanData); // 5 Points per scan
+      addEcoPoints(5, lastScanData);
     }
 
   } catch (err) {
-    console.error("AI analyze failed:", err);
-    resultContainer.innerHTML = "⚠️ AI failed — please confirm manually.";
+    console.error("Analyze failed:", err);
+    resultContainer.innerHTML = "⚠️ AI failed. Trying manual mode.";
     showConfirmationChoices(selectedFile);
   }
 }
@@ -388,24 +382,97 @@ function mapManualCategory(type) {
 // Map Logic
 async function findNearbyCenters(){
   if(!lastScanData){ alert("Identify item first."); return; }
-  if(!navigator.geolocation){ alert("Geolocation not supported"); return; }
-  const status = document.createElement("div"); status.textContent = "📍 Finding centers..."; resultContainer.appendChild(status);
+  
+  const resultBox = document.getElementById("result");
+  // Remove old status if exists
+  const oldStatus = document.getElementById("places-status");
+  if(oldStatus) oldStatus.remove();
+
+  // Show Loading Status
+  const status = document.createElement("div");
+  status.id = "places-status";
+  status.style.marginTop = "10px";
+  status.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Finding nearby centers...`;
+  resultBox.appendChild(status);
+
+  if(!navigator.geolocation){
+    status.textContent = "❌ Geolocation is disabled.";
+    return;
+  }
+
   navigator.geolocation.getCurrentPosition(async (pos) => {
     try {
-      const res = await fetch(`${window.BACKEND_URL}/api/places?lat=${pos.coords.latitude}&lng=${pos.coords.longitude}`);
+      const lat = pos.coords.latitude;
+      const lng = pos.coords.longitude;
+      
+      const res = await fetch(`${window.BACKEND_URL}/api/places?lat=${lat}&lng=${lng}`);
       const places = await res.json();
-      status.remove();
-      renderPlaces(places, pos.coords.latitude, pos.coords.longitude);
-    } catch (e) { status.textContent = "❌ Failed to fetch centers."; }
+      
+      status.remove(); // Remove loading text
+      renderPlaces(places, lat, lng);
+      
+    } catch (e) {
+      console.error(e);
+      status.textContent = "❌ Failed to connect to map server.";
+    }
+  }, (err) => {
+    status.textContent = "❌ Location permission denied.";
   });
 }
 
 function renderPlaces(places, lat, lng){
-  mapSection.classList.remove("hidden");
-  if(!map){ map = L.map("map").setView([lat, lng], 13); L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png").addTo(map); markersLayer = L.layerGroup().addTo(map); } 
-  else { markersLayer.clearLayers(); }
-  L.marker([lat, lng]).addTo(markersLayer).bindPopup("You").openPopup();
-  if(places && places.length){ places.forEach(p => { if(p.location) L.marker([p.location.lat, p.location.lng]).addTo(markersLayer).bindPopup(p.name); }); }
+  const mapSection = document.getElementById("mapSection");
+  mapSection.classList.remove("hidden"); // Force show container
+  
+  // CASE 1: No Places Found
+  if (!places || places.length === 0) {
+    // Destroy map if it exists so it doesn't overlap text
+    if(map) { map.remove(); map = null; }
+    
+    mapSection.innerHTML = `
+      <div style="background:#f1f5f9; padding:20px; border-radius:12px; text-align:center; color:#64748b;">
+        <i class="fa-solid fa-map-location-dot" style="font-size:30px; margin-bottom:10px; display:block;"></i>
+        <strong>No centers found nearby.</strong>
+        <p style="font-size:12px; margin:5px 0 0;">Try searching your local municipal website.</p>
+      </div>
+    `;
+    return;
+  }
+
+  // CASE 2: Places Found -> Render Map
+  // Reset HTML in case "No centers" was previously shown
+  if(!document.getElementById("map")) {
+     mapSection.innerHTML = '<div id="map" style="height:300px; width:100%;"></div>';
+  }
+
+  // Initialize Map
+  if(!map){ 
+    map = L.map("map").setView([lat, lng], 13); 
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '© OpenStreetMap'
+    }).addTo(map); 
+    markersLayer = L.layerGroup().addTo(map); 
+  } else { 
+    markersLayer.clearLayers(); 
+    map.invalidateSize(); // Fix gray map glitch
+  }
+  
+  // Add User Marker
+  L.marker([lat, lng]).addTo(markersLayer).bindPopup("<b>You are here</b>").openPopup();
+  
+  // Add Place Markers
+  places.forEach(p => { 
+    if(p.location) {
+      L.marker([p.location.lat, p.location.lng])
+       .addTo(markersLayer)
+       .bindPopup(`<b>${p.name}</b><br>${p.address || ''}`); 
+    }
+  });
+  
+  // Fit map to show all markers
+  const group = new L.featureGroup(places.map(p => L.marker([p.location.lat, p.location.lng])));
+  group.addLayer(L.marker([lat, lng])); // Include user
+  map.fitBounds(group.getBounds().pad(0.2));
 }
 
 function logout() {
