@@ -177,6 +177,7 @@
 
             <div class="controls">
               <input type="file" id="fileInput" accept="image/*" hidden />
+              <input type="file" id="cameraInput" accept="image/*" capture="environment" hidden />
               
               <div class="btn-group">
                 <button id="uploadBtn" class="btn primary-btn">
@@ -304,6 +305,22 @@
         <i class="fa-solid fa-book-open"></i>
         <span>Guide</span>
       </a>
+    </div>
+    <div id="uploadModal" class="modal-overlay hidden" onclick="closeUploadModal()">
+      <div class="modal-content" style="max-width: 350px; text-align:center;" onclick="event.stopPropagation()">
+        <div class="modal-header">
+          <h3>📸 Upload Photo</h3>
+          <button class="close-btn" onclick="closeUploadModal()">&times;</button>
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">
+          <button onclick="triggerCamera()" class="primary-btn" style="justify-content: center; padding: 12px;">
+            <i class="fa-solid fa-camera"></i> Take Photo
+          </button>
+          <button onclick="triggerGallery()" class="secondary-btn" style="justify-content: center; padding: 12px;">
+            <i class="fa-solid fa-images"></i> Open Gallery
+          </button>
+        </div>
+      </div>
     </div>
     <script src="app.js"></script>
 

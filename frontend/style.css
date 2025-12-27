@@ -835,3 +835,9 @@ button {
     bottom: -30%;
   }
 }
+/* Optional: Better spacing for the upload modal buttons */
+#uploadModal .primary-btn, 
+#uploadModal .secondary-btn {
+  width: 100%;
+  font-size: 16px;
+}

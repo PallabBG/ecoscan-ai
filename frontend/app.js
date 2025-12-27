@@ -1,7 +1,7 @@
 // app.js - Fixed Manual Logic & Logged Out UX
-
-// --- Global Refs ---
+// At the top with Global Refs:
 const fileInput = document.getElementById("fileInput");
+const cameraInput = document.getElementById("cameraInput"); // <--- ADD THIS
 const uploadBtn = document.getElementById("uploadBtn");
 const analyzeBtn = document.getElementById("analyzeBtn");
 const preview = document.getElementById("preview");
@@ -32,7 +32,24 @@ function toggleGuide() {
   const m = document.getElementById("guideModal");
   if(m) m.classList.toggle("hidden");
 }
+// --- ADD THESE NEW FUNCTIONS ---
+function openUploadModal() {
+  document.getElementById("uploadModal").classList.remove("hidden");
+}
 
+function closeUploadModal() {
+  document.getElementById("uploadModal").classList.add("hidden");
+}
+
+function triggerCamera() {
+  closeUploadModal();
+  cameraInput.click(); 
+}
+
+function triggerGallery() {
+  closeUploadModal();
+  fileInput.click();   
+}
 // --- History Logic ---
 function openHistory() {
   if (!isLoggedIn()) {
@@ -221,8 +238,16 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 // --- CORE: AI Identification ---
-uploadBtn.addEventListener("click", () => fileInput.click());
+// FIND THIS SECTION AND UPDATE IT:
+
+// 1. CHANGE the uploadBtn listener to open the modal:
+uploadBtn.addEventListener("click", openUploadModal); 
+
+// 2. KEEP your existing fileInput listener:
 fileInput.addEventListener("change", onFileSelected);
+
+// 3. ADD this new listener for the camera:
+cameraInput.addEventListener("change", onFileSelected);
 analyzeBtn.addEventListener("click", analyze);
 findCentersBtn.addEventListener("click", findNearbyCenters);
 
